@@ -2059,6 +2059,7 @@ void serializeAllMembers(T, Char)(scope void delegate(const(Char)[]) w, auto ref
 
 void serializeImpl(P, T, Char)(ref P policy, scope void delegate(const(Char)[]) w, ref T val) if (is(T == struct))
 {
+    import std.sumtype;
     static if(isInstanceOf!(Nullable, T))
     {
         if(val.isNull)
@@ -2108,6 +2109,10 @@ void serializeImpl(P, T, Char)(ref P policy, scope void delegate(const(Char)[]) 
             w(val.boolean ? "true" : "false");
             break;
         }
+    }
+    else static if(isInstanceOf!(SumType, T))
+    {
+        val.match!( v => serializeImpl(w,v));
     }
     else static if(__traits(hasMember, T, "toJSON"))
     {
@@ -2162,6 +2167,16 @@ void serializeImpl(P, T, Char)(ref P policy, scope void delegate(const(Char)[]) 
         policy.serializeAllMembers(w, val);
         w("}");
     }
+}
+
+// serialize sumtype
+unittest
+{
+    import std.sumtype;
+    alias S = SumType!(int, string);
+
+    S[2] s = [S(3), S("test")];
+    assert(serialize(s) == `[3, "test"]`);
 }
 
 // null class members
