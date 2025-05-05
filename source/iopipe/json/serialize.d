@@ -309,11 +309,11 @@ unittest {
 
     T t = deserialize!(T)(`{"name": "valid", "a": "another string", "b": 2, "c": 8.5}`);
     assert(t.name == "valid");
-    assert(t.stuff.object["a"].type == JSONType.String);
+    assert(t.stuff.object["a"].type == JSONType.StringSSO);
     assert(t.stuff.object["a"].str == "another string");
-    assert(t.stuff.object["b"].type == JSONType.Integer);
+    assert(t.stuff.object["b"].type == JSONType.NumberSSO);
     assert(t.stuff.object["b"].integer == 2);
-    assert(t.stuff.object["c"].type == JSONType.Floating);
+    assert(t.stuff.object["c"].type == JSONType.NumberSSO);
     assert(t.stuff.object["c"].floating == 8.5);
 }
 
@@ -899,10 +899,10 @@ unittest
     auto jv = s3.json.object["arr1"];
     assert(jv.type == JSONType.Array);
     assert(jv.array.length == 4);
-    assert(jv.array[0].type == JSONType.Integer);
-    assert(jv.array[1].type == JSONType.Integer);
-    assert(jv.array[2].type == JSONType.Integer);
-    assert(jv.array[3].type == JSONType.Integer);
+    assert(jv.array[0].type == JSONType.NumberSSO);
+    assert(jv.array[1].type == JSONType.NumberSSO);
+    assert(jv.array[2].type == JSONType.NumberSSO);
+    assert(jv.array[3].type == JSONType.NumberSSO);
     assert(jv.array[0].integer == 5);
     assert(jv.array[1].integer == 6);
     assert(jv.array[2].integer == 7);
@@ -910,10 +910,10 @@ unittest
     jv = s3.json.object["arr2"]; // array of different types
     assert(jv.type == JSONType.Array);
     assert(jv.array.length == 4);
-    assert(jv.array[0].type == JSONType.Integer);
+    assert(jv.array[0].type == JSONType.NumberSSO);
     assert(jv.array[1].type == JSONType.Null);
     assert(jv.array[2].type == JSONType.Bool);
-    assert(jv.array[3].type == JSONType.String);
+    assert(jv.array[3].type == JSONType.StringSSO);
     assert(jv.array[0].integer == 1);
     //jv.array[1] no value for "Null" type
     assert(jv.array[2].boolean);
@@ -942,9 +942,9 @@ unittest
     assert(s4.x == 5);
     assert(s4.extraData.type == JSONType.Obj);
     assert(s4.extraData.object.length == 3);
-    assert(s4.extraData.object["y"].type == JSONType.String);
+    assert(s4.extraData.object["y"].type == JSONType.StringSSO);
     assert(s4.extraData.object["y"].str == "foo");
-    assert(s4.extraData.object["d"].type == JSONType.Floating);
+    assert(s4.extraData.object["d"].type == JSONType.NumberSSO);
     assert(s4.extraData.object["d"].floating == 8.5);
     assert(s4.extraData.object["b"].type == JSONType.Bool);
     assert(s4.extraData.object["b"].boolean == true);
@@ -2321,8 +2321,13 @@ unittest
 unittest
 {
     // test serializing JSONValue
+    import std.algorithm.iteration : filter;
+    import std.algorithm.comparison : equal;
+    import std.uni : isWhite;
+    import std.functional : not;
+    static auto equalIgnoreWhitespace(string s, string s2) => s.filter!(not!isWhite).equal(s2.filter!(not!isWhite));
     auto j = deserialize!(JSONValue!string)(`{"a": [1, 2, 3], "b": null}`);
-    assert(j.serialize == `{"a" : [1, 2, 3], "b" : null}`);
+    assert(equalIgnoreWhitespace(j.serialize, `{"a" : [1, 2, 3], "b" : null}`));
 }
 
 // JSON5 tests
